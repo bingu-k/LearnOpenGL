@@ -1,0 +1,78 @@
+#ifndef COMMON_HPP
+#define COMMON_HPP
+
+#include <memory>
+#include <string>
+#include <optional>
+
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
+#include <vector>
+
+#define CLASS_PTR(Shader)
+class Shader;
+using ShaderUPtr = std::unique_ptr<Shader>;
+using ShaderSPtr = std::shared_ptr<Shader>;
+using ShaderWPtr = std::weak_ptr<Shader>;
+
+#define CLASS_PTR(Program)
+class Program;
+using ProgramUPtr = std::unique_ptr<Program>;
+using ProgramSPtr = std::shared_ptr<Program>;
+using ProgramWPtr = std::weak_ptr<Program>;
+
+#define CLASS_PTR(Context)
+class Context;
+using ContextUPtr = std::unique_ptr<Context>;
+using ContextSPtr = std::shared_ptr<Context>;
+using ContextWPtr = std::weak_ptr<Context>;
+
+const GLuint	WINDOW_WIDTH=960;
+const GLuint	WINDOW_HEIGHT=520;
+
+int	putError(std::string str)
+{
+	std::cerr << str << std::endl;
+	return (-1);
+};
+
+std::optional<std::string>  LoadTextFile(const std::string& filename)
+{
+    std::ifstream   fin(filename);
+    if (!fin.is_open())
+    {
+        putError("Failed to open file: " + filename);
+        return {};
+    }
+    std::stringstream   text;
+    text << fin.rdbuf();
+    return (text.str());
+};
+
+void	OnFramebufferSizeChange(GLFWwindow* window, int width, int height)
+{
+	std::cout << "FrameBuffer size changed: (" << width << ", " << height << ")" << std::endl;
+	glViewport(0, 0, width, height);
+};
+
+void	OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	std::cout << "key: " << key << "\tscancode: " << scancode;
+	std::cout << "\taction: " <<	(action == GLFW_PRESS ? "Pressed" : 
+								(action == GLFW_RELEASE ? "RELEASE" :
+								(action == GLFW_REPEAT ? "REPEAT" : "UNKNOWN")))
+			<< "\tmods: " << (mods & GLFW_MOD_CONTROL ? "C" :
+							(mods & GLFW_MOD_SHIFT ? "S" :
+							(mods & GLFW_MOD_ALT ? "A" : "---"))) << std::endl;
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+};
+
+#endif
