@@ -11,6 +11,7 @@ void	OnFramebufferSizeChange(GLFWwindow* window, int width, int height)
 
 void	OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 	std::cout << "key: " << key << "\tscancode: " << scancode;
 	std::cout << "\taction: " <<	(action == GLFW_PRESS ? "Pressed" : 
 								(action == GLFW_RELEASE ? "RELEASE" :
@@ -35,6 +36,7 @@ void	OnCursorPos(GLFWwindow* window, double x, double y)
 
 void	OnMouseButton(GLFWwindow* window, int button, int action, int modifier)
 {
+	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, modifier);
 	auto	context = reinterpret_cast<Context*>(glfwGetWindowUserPointer(window));
 	double	x, y;
 	glfwGetCursorPos(window, &x, &y);
@@ -98,7 +100,7 @@ int	main(void)
 	}
 	glfwSetWindowUserPointer(window, context.get());
 
-	// Callback Function 설정
+	// Custom Callback Function 설정
 	OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
 	glfwSetKeyCallback(window, OnKeyEvent);
@@ -106,6 +108,10 @@ int	main(void)
 	glfwSetCursorPosCallback(window, OnCursorPos);
 	glfwSetMouseButtonCallback(window, OnMouseButton);
     glfwSetScrollCallback(window, OnScroll);
+
+	// ImGui Callback Function install
+	// custom에서 조절했기 때문에 필요하지 않다.
+	// ImGui_ImplGlfw_InstallCallbacks(window);
 
 	// Rendering 시작
 	std::cout << "Start main loop" << std::endl;

@@ -55,7 +55,7 @@ ContextUPtr  Context::Create(void)
 
 void    Context::Render(void)
 {
-    if (ImGui::Begin("ui window")) {
+    if (ImGui::Begin("ui window", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
         if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor)))
             glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
         ImGui::Separator();
