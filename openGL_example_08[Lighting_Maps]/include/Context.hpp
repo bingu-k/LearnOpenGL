@@ -23,6 +23,8 @@ public:
     void    MouseButton(int button, int action, double x, double y);
 private:
     ProgramUPtr         m_program;
+    ProgramUPtr         m_simpleProgram;
+
     VertexLayoutUPtr    m_VAO;
     BufferUPtr          m_VBO, m_EBO;
     TextureUPtr         m_texture1;
@@ -47,9 +49,8 @@ private:
     Light       m_light;
 
     struct Material {
-        glm::vec3   ambient { glm::vec3(1.0f, 0.5f, 0.3f) };
-        glm::vec3   diffuse { glm::vec3(1.0f, 0.5f, 0.3f) };
-        glm::vec3   specular { glm::vec3(0.5f, 0.5f, 0.5f) };
+        TextureUPtr diffuse;
+        TextureUPtr specular;
         float       shininess { 32.0f };
     };
     Material    m_material;
@@ -96,9 +97,6 @@ void    Context::Render(void)
         }
         if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::ColorEdit3("Ambient", glm::value_ptr(this->m_material.ambient));
-            ImGui::ColorEdit3("Diffuse", glm::value_ptr(this->m_material.diffuse));
-            ImGui::ColorEdit3("Specular", glm::value_ptr(this->m_material.specular));
             ImGui::DragFloat("Shininess", &m_material.shininess, 1.0f, 1.0f, 256.0f);
         }
         ImGui::Checkbox("Animation", &this->m_animate);
@@ -129,11 +127,15 @@ void    Context::Render(void)
     m_program->SetUniform("light.diffuse", this->m_light.diffuse);
     m_program->SetUniform("light.specular", this->m_light.specular);
 
-    m_program->SetUniform("material.ambient", this->m_material.ambient);
-    m_program->SetUniform("material.diffuse", this->m_material.diffuse);
-    m_program->SetUniform("material.specular", this->m_material.specular);
-    m_program->SetUniform("material.shininess", this->m_material.shininess);
+    m_program->SetUniform("material.diffuse", 0);
+    m_program->SetUniform("material.specular", 1);
+    
+    glActiveTexture(GL_TEXTURE0);
+    m_material.diffuse->Bind();
+    glActiveTexture(GL_TEXTURE1);
+    m_material.specular->Bind();
 
+    m_program->SetUniform("material.shininess", this->m_material.shininess);
 
     m_cameraFront = glm::rotate(glm::mat4(1.0f), glm::radians(this->m_cameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::rotate(glm::mat4(1.0f), glm::radians(this->m_cameraPitch), glm::vec3(1.0f, 0.0f, 0.0f)) *
@@ -161,13 +163,12 @@ void    Context::Render(void)
     // Light cube 생성
     auto    lightModelTransform = glm::translate(glm::mat4(1.0), this->m_light.position)
                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-    m_program->Use();
-    m_program->SetUniform("light.position", this->m_light.position);
-    m_program->SetUniform("light.ambient", glm::vec3(1.0f));
-    m_program->SetUniform("material.ambient", glm::vec3(1.0f));
-    m_program->SetUniform("transform", projection * view * lightModelTransform);
-    m_program->SetUniform("modelTransform", lightModelTransform);
+    m_simpleProgram->Use();
+    m_simpleProgram->SetUniform("Color", glm::vec4(m_light.ambient + m_light.diffuse, 1.0f));
+    m_simpleProgram->SetUniform("transform", projection * view * lightModelTransform);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+    m_program->Use();
 };
 
 void    Context::ProcessInput(GLFWwindow* window)
@@ -297,20 +298,18 @@ bool    Context::init(void)
     m_VAO->SetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 3);
     m_VAO->SetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 6);
 
-    // Shader 생성
-	std::cout << std::filesystem::current_path().string() << std::endl;
-	ShaderSPtr	vertexShader = Shader::CreateFromFile(".\\shader\\shader.vs", GL_VERTEX_SHADER);
-	ShaderSPtr	fragmentShader = Shader::CreateFromFile(".\\shader\\shader.fs", GL_FRAGMENT_SHADER);
-	if (!vertexShader || !fragmentShader)
-        return (false);
-    std::cout << "Vertex Shader id: " << vertexShader->Get() << std::endl;
-	std::cout << "Fragment Shader id: " << fragmentShader->Get() << std::endl;
-
-	// Program 생성
-	this->m_program = Program::Create({fragmentShader, vertexShader});
+    // Shader, Program 생성
+	this->m_program = Program::Create(".\\shader\\shader.vs", ".\\shader\\shader.fs");
     if (!this->m_program)
         return (false);
-	std::cout << "Program Shader id: " << this->m_program->Get() << std::endl;
+
+    // Texture 설정
+    m_material.diffuse = Texture::CreateFromImage(Image::Load(".\\image\\container2.png").get());
+    m_material.specular = Texture::CreateFromImage(Image::Load(".\\image\\container2_specular.png").get());
+
+	this->m_simpleProgram = Program::Create(".\\shader\\simple.vs", ".\\shader\\simple.fs");
+    if (!this->m_simpleProgram)
+        return (false);
 
     // 배경 Clear 색상 지정
     glClearColor(0.1f, 0.2f, 0.3f, 0.0f);
