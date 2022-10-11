@@ -2,6 +2,7 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
+
 const GLuint	WINDOW_WIDTH=960;
 const GLuint	WINDOW_HEIGHT=520;
 
@@ -33,7 +34,7 @@ int	main(void)
 		glfwTerminate();
 		return (putError("Failed to create glfw window"));
 	}
-	
+
 	putString("Start main loop");
 	while (!glfwWindowShouldClose(window))
 	{
