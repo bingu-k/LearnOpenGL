@@ -43,8 +43,8 @@ ProgramUPtr Program::Create(const std::vector<ShaderSPtr>& shaders)
 };
 ProgramUPtr  Program::Create(const std::string& vertexShaderFilename, const std::string& fragmentShaderFilename)
 {
-    ShaderSPtr	vertexShader = Shader::CreateFromFile(".\\shader\\shader.vs", GL_VERTEX_SHADER);
-	ShaderSPtr	fragmentShader = Shader::CreateFromFile(".\\shader\\shader.fs", GL_FRAGMENT_SHADER);
+    ShaderSPtr	vertexShader = Shader::CreateFromFile(vertexShaderFilename, GL_VERTEX_SHADER);
+	ShaderSPtr	fragmentShader = Shader::CreateFromFile(fragmentShaderFilename, GL_FRAGMENT_SHADER);
 	if (!vertexShader || !fragmentShader)
         return (nullptr);
     std::cout << "Vertex Shader id: " << vertexShader->Get() << std::endl;
